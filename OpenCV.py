@@ -1,12 +1,31 @@
 import cv2
-import numpy
-import os
-# Make an array of 120,000 random bytes.
-randomByteArray = bytearray(os.urandom(120000))
-flatNumpyArray = numpy.array(randomByteArray)
-# Convert the array to make a 400x300 grayscale image.
-grayImage = flatNumpyArray.reshape(300, 400)
-cv2.imwrite('RandomGray.png', grayImage)
-# Convert the array to make a 400x100 color image.
-bgrImage = flatNumpyArray.reshape(100, 400, 3)
-cv2.imwrite('RandomColor.png', bgrImage)
+import numpy as np
+cap=cv2.VideoCapture(0)
+
+ret,frame1=cap.read()
+ret,frame2=cap.read()
+while cap.isOpened():
+    diff =cv2.absdiff(frame1,frame2)
+    gray=cv2.cvtColor(diff,cv2.COLOR_BGR2GRAY)
+    blur=cv2.GaussianBlur(gray,(5,5),0)
+    _,thresh=cv2.threshold(blur,20,255,cv2.THRESH_BINARY)
+    dialted=cv2.dilate(thresh,None,iterations=3)
+    contour,_=cv2.findContours(dialted,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    for contours in contour:
+        (x,y,w,h)=cv2.boundingRect(contours)
+        if cv2.contourArea(contours)<950:
+
+            continue
+        else:
+            cv2.rectangle(frame1,(x,y),(x+w,y+h),(0,255,0),3)
+            cv2.putText(frame1,'Status:{}'.format('Movement'),(10,20),cv2.FONT_HERSHEY_DUPLEX,1,(0,0,255),3)
+
+   
+    cv2.imshow('feed',frame1)
+    frame1=frame2
+    ret,frame2=cap.read()
+    if cv2.waitKey(40)==97:
+        break
+cap.release()
+cv2.destroyAllWindows()
+
